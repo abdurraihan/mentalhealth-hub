@@ -1,0 +1,22 @@
+import express, { Application } from "express";
+import cors from "cors";
+import dotenv from "dotenv";
+import userRoutes from "./routes/userRoutes";
+import errorHandler from "./middlewares/errorHandler";
+import adminRoutes from "./routes/adminRoutes";
+
+dotenv.config();
+
+const app: Application = express();
+
+// Middlewares
+app.use(cors());
+app.use(express.json());
+
+// Routes
+app.use("/api/users", userRoutes);
+app.use("/api/admin", adminRoutes);
+// Error handler
+app.use(errorHandler);
+
+export default app;
