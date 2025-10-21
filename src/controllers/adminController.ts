@@ -134,3 +134,50 @@ export const resetPassword = async (req: Request, res: Response) => {
     res.status(500).json({ message: "Something went wrong" });
   }
 };
+
+
+
+
+export const updateProfile = async (req: Request, res: Response) => {
+  try {
+    const adminId = req.user; // coming from protectAdmin middleware
+    if (!adminId) {
+      return res.status(400).json({ message: "Admin ID required" });
+    }
+
+    const updates: any = {};
+
+    if (req.file) {
+      const imageUrl = `${req.protocol}://${req.get("host")}/uploads/${req.file.filename}`;
+      updates.profileImage = imageUrl;
+    }
+
+    if (req.body.name) {
+      updates.name = req.body.name;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No update data provided" });
+    }
+
+    const updatedAdmin = await Admin.findByIdAndUpdate(adminId, updates, {
+      new: true,
+    });
+
+    if (!updatedAdmin) {
+      return res.status(404).json({ message: "Admin not found" });
+    }
+
+    res.status(200).json({
+      message: "Profile updated successfully",
+      admin: {
+        name: updatedAdmin.name,
+        profileImage: updatedAdmin.profileImage,
+      },
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: "Server error", error: error.message });
+  }
+};
+
+
