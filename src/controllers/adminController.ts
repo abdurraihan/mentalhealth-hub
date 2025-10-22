@@ -137,7 +137,6 @@ export const resetPassword = async (req: Request, res: Response) => {
 
 
 
-
 export const updateProfile = async (req: Request, res: Response) => {
   try {
     const adminId = req.user; // coming from protectAdmin middleware
