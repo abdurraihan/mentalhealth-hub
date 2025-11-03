@@ -87,7 +87,6 @@ export const getMobileCrisisSummary = async (req: Request, res: Response) => {
     const startDate = new Date(y, m - 1, 1);
     const endDate = new Date(y, m, 1);
 
-    // Match filter for the date range
     const dateFilter = { createdAt: { $gte: startDate, $lt: endDate } };
 
     // 1. Referrals to Mobile Crisis (Count by Referral Source)
@@ -165,7 +164,7 @@ export const getMobileCrisisSummary = async (req: Request, res: Response) => {
       { 
         $group: { 
           _id: null, 
-          avgMinutes: { $avg: "$meanOnSceneTime" }
+          avgMinutes: { $sum: "$meanOnSceneTime" }
         } 
       }
     ]);
