@@ -9,7 +9,8 @@ import userManagementRouts from "./routes/userManagementRoutes";
 import crisisCallsRoutes from "./routes/crisisCallsRoutes";
 import mobileCrisisRoutes from "./routes/mobileCrisisRoutes";
 import crisisStabilizationUnitRoutes from "./routes/crisisStabilizationUnitRoutes";
-
+import dashboardSummaryRoutes from "./routes/dashboardSummaryRoutes"
+import userSummaryRoutes from "./routes/userSummaryRouter";
 dotenv.config();
 
 const app: Application = express();
@@ -29,6 +30,8 @@ app.use("/api/users/management",userManagementRouts)
 app.use("/api/crisis_calls", crisisCallsRoutes)
 app.use("/api/mobile_crisis", mobileCrisisRoutes)
 app.use("/api/crisis_stabilization_unit", crisisStabilizationUnitRoutes)
+app.use("/api/dashboard",dashboardSummaryRoutes)
+app.use("/api/user", userSummaryRoutes);
 
 // Error handler
 app.use(errorHandler);
