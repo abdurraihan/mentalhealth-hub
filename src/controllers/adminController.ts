@@ -92,7 +92,8 @@ export const adminLogin = async (req: Request, res: Response) => {
 };
 
 
-export const forgotPassword = async (req: Request, res: Response) => {
+
+export const sendForgotPasswordOTP = async (req: Request, res: Response) => {
   try {
     const { email } = req.body;
     const admin = await Admin.findOne({ email });
@@ -104,8 +105,28 @@ export const forgotPassword = async (req: Request, res: Response) => {
 
     await sendMail(email, otp, "verify");
 
+    res.status(200).json({ success: true, message: "OTP sent to your email" });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Something went wrong" });
+  }
+};
 
-    res.status(200).json({ message: "OTP sent to your email" });
+export const verifyForgotPasswordOTP = async (req: Request, res: Response) => {
+  try {
+    const { email, otp } = req.body;
+
+    const admin = await Admin.findOne({ email }).select("+otp");
+    if (!admin) return res.status(404).json({ message: "Admin not found" });
+
+    if (admin.otp !== otp)
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+
+    admin.otp = null; // clear OTP after verification
+    admin.isOtpVerified = true; // flag to allow password reset
+    await admin.save();
+
+    res.status(200).json({ success: true, message: "OTP verified successfully" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });
@@ -113,22 +134,25 @@ export const forgotPassword = async (req: Request, res: Response) => {
 };
 
 
-export const resetPassword = async (req: Request, res: Response) => {
+export const resetPasswordAfterOTPVerification = async (req: Request, res: Response) => {
   try {
-    const { email, otp, newPassword } = req.body;
+    const { email, password, confirmPassword } = req.body;
 
-    const admin = await Admin.findOne({ email }).select("+password +otp");
+    if (password !== confirmPassword)
+      return res.status(400).json({ message: "Passwords do not match" });
+
+    const admin = await Admin.findOne({ email }).select("+password +isOtpVerified");
     if (!admin) return res.status(404).json({ message: "Admin not found" });
 
-    if (admin.otp !== otp)
-      return res.status(400).json({ message: "Invalid or expired OTP" });
+    if (!admin.isOtpVerified)
+      return res.status(403).json({ message: "OTP verification required" });
 
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const hashedPassword = await bcrypt.hash(password, 10);
     admin.password = hashedPassword;
-    admin.otp = null;
+    admin.isOtpVerified = false; // reset flag after successful password change
     await admin.save();
 
-    res.status(200).json({ message: "Password reset successful" });
+    res.status(200).json({ success: true, message: "Password reset successful" });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Something went wrong" });

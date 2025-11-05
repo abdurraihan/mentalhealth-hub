@@ -7,6 +7,7 @@ export interface IAdmin extends Document {
   password: string;
   profileImage?: string;
   otp?: string;
+  isOtpVerified:boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +52,8 @@ const adminSchema = new Schema<IAdmin>(
       default: null,
       expires: 300, // 5min
     },
+    isOtpVerified: { type: Boolean, default: false },
+
   },
   {
     timestamps: true,

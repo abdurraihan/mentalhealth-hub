@@ -284,3 +284,42 @@ export const toggleUserStatus = async (req: Request, res: Response) => {
     });
   }
 };
+
+
+export const deleteUserByAdmin = async (req: Request, res: Response) => {
+  try {
+    const adminId = req.user?._id;
+    if (!adminId) {
+      return res.status(401).json({
+        success: false,
+        message: "Unauthorized admin",
+      });
+    }
+
+    const { userId } = req.params;
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // Delete user
+    await User.findByIdAndDelete(userId);
+
+    return res.status(200).json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error: any) {
+    console.error("Error deleting user:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};

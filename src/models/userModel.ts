@@ -6,6 +6,8 @@ export interface IUser extends Document {
   password: string;
   status: "active" | "inactive" ;
   otp?: string;
+  isOtpVerified:boolean;
+
   profileImage?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -45,6 +47,8 @@ const userSchema = new Schema<IUser>(
       default:
         "https://i.pravatar.cc/300?img=65",
     },
+    isOtpVerified: { type: Boolean, default: false }
+
   },
   { timestamps: true }
 );
