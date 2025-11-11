@@ -1,0 +1,105 @@
+name: Deploy to VPS
+
+on:
+  push:
+    branches:
+      - main  # Change this to your production branch
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'  # Change to your Node version
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Create deployment package
+        run: |
+          mkdir -p deploy
+          cp -r dist deploy/
+          cp package*.json deploy/
+          cp .env.example deploy/ || true
+          tar -czf deploy.tar.gz -C deploy .
+
+      - name: Deploy to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "deploy.tar.gz"
+          target: "/tmp"
+
+      - name: Extract and restart application
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Set deployment directory (change this to your app path)
+            APP_DIR="/home/rayhan/mentalhealth-hub"
+            
+            # Create backup of current deployment
+            if [ -d "$APP_DIR" ]; then
+              BACKUP_DIR="$APP_DIR-backup-$(date +%Y%m%d-%H%M%S)"
+              cp -r "$APP_DIR" "$BACKUP_DIR"
+              echo "Backup created at $BACKUP_DIR"
+            fi
+            
+            # Create app directory if it doesn't exist
+            mkdir -p $APP_DIR
+            
+            # Extract new deployment
+            tar -xzf /tmp/deploy.tar.gz -C $APP_DIR
+            
+            # Install production dependencies
+            cd $APP_DIR
+            npm ci --omit=dev
+            
+            # Restart application using PM2 (or your process manager)
+            # If using PM2:
+            pm2 restart your-app-name || pm2 start dist/server.js --name mentalhealthBackend
+            
+            # Clean up
+            rm /tmp/deploy.tar.gz
+            
+            echo "Deployment completed successfully!"
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            # Check if application is running
+            # For PM2:
+            pm2 status your-app-name
+            
+            # For systemd:
+            # sudo systemctl status your-app-service
+            
+            # For simple process:
+            # ps aux | grep "node dist/server.js"
+
+      - name: Notification on success
+        if: success()
+        run: echo "✅ Deployment successful!"
+
+      - name: Notification on failure
+        if: failure()
+        run: echo "❌ Deployment failed!"
