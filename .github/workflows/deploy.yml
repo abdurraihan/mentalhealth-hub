@@ -72,7 +72,7 @@ jobs:
             
             # Restart application using PM2 (or your process manager)
             # If using PM2:
-            pm2 restart your-app-name || pm2 start dist/server.js --name mentalhealthBackend
+            pm2 restart mentalhealthBackend || pm2 start dist/server.js --name mentalhealthBackend
             
             # Clean up
             rm /tmp/deploy.tar.gz
@@ -88,7 +88,7 @@ jobs:
           script: |
             # Check if application is running
             # For PM2:
-            pm2 status your-app-name
+            pm2 status mentalhealthBackend
             
             # For systemd:
             # sudo systemctl status your-app-service
