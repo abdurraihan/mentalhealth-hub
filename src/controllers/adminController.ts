@@ -9,7 +9,7 @@ export const adminSignup = async (req: Request, res: Response) => {
   try {
     const { name, email, password, profileImage } = req.body;
 
-    // Check if an admin already exists
+   
     const existingAdmin = await Admin.findOne();
     if (existingAdmin) {
       return res
@@ -17,15 +17,13 @@ export const adminSignup = async (req: Request, res: Response) => {
         .json({ success: false, message: "Admin already exists. Only one admin allowed." });
     }
 
-    // Validate required fields
+  
     if (!name || !email || !password) {
       return res.status(400).json({ success: false, message: "All fields are required." });
     }
 
-    // Hash the password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the admin
     const newAdmin = await Admin.create({
       name,
       email,
@@ -70,8 +68,8 @@ export const adminLogin = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: "Invalid email or password." });
     }
 
-    // Generate JWT token
-    const token = generateToken(admin._id.toString());
+    
+    const token = generateToken(admin?._id.toString());
 
    
     res.status(200).json({
@@ -90,6 +88,21 @@ export const adminLogin = async (req: Request, res: Response) => {
     res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
   }
 };
+
+export const adminInfo = async (req:Request, res:Response)=>{
+  try {
+
+    const admin = await Admin.find().select("-password")
+    if(!admin){
+      res.status(400).json("can't find admin");
+    }
+     res.status(200).json(admin);
+  } catch (error:any) {
+    console.error("somthing is missing in admin info", error.message);
+    res.status(500).json({ success: false, message: "Internal Server Error", error: error.message });
+  
+  }
+}
 
 
 
@@ -122,8 +135,8 @@ export const verifyForgotPasswordOTP = async (req: Request, res: Response) => {
     if (admin.otp !== otp)
       return res.status(400).json({ message: "Invalid or expired OTP" });
 
-    admin.otp = null; // clear OTP after verification
-    admin.isOtpVerified = true; // flag to allow password reset
+    admin.otp  = null; 
+    admin.isOtpVerified = true; 
     await admin.save();
 
     res.status(200).json({ success: true, message: "OTP verified successfully" });
@@ -149,7 +162,7 @@ export const resetPasswordAfterOTPVerification = async (req: Request, res: Respo
 
     const hashedPassword = await bcrypt.hash(password, 10);
     admin.password = hashedPassword;
-    admin.isOtpVerified = false; // reset flag after successful password change
+    admin.isOtpVerified = false; 
     await admin.save();
 
     res.status(200).json({ success: true, message: "Password reset successful" });
@@ -163,7 +176,7 @@ export const resetPasswordAfterOTPVerification = async (req: Request, res: Respo
 
 export const updateProfile = async (req: Request, res: Response) => {
   try {
-    const adminId = req.user; // coming from protectAdmin middleware
+    const adminId = req.user; 
     if (!adminId) {
       return res.status(400).json({ message: "Admin ID required" });
     }

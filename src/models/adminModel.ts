@@ -2,11 +2,12 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 
 export interface IAdmin extends Document {
+  _id: string;
   name: string;
   email: string;
   password: string;
   profileImage?: string;
-  otp?: string;
+  otp?: string | null;
   isOtpVerified:boolean;
   createdAt: Date;
   updatedAt: Date;

@@ -54,7 +54,7 @@ export const getUserSummary = async (req: Request, res: Response) => {
       return res.status(401).json({ success: false, message: "Unauthorized user" });
     }
 
-    const userId = user._id || user.id;
+    const userId = user._id ;
 
     // Total submissions per form type
     const [crisisCalls, mobileCrisis, stabilization] = await Promise.all([
